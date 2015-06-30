@@ -3,29 +3,37 @@ Hoot.view.utilities.dataset = function(context)
     var hoot_view_utilities_dataset = {};
     
     hoot_view_utilities_dataset.createContent = function(form){
+        var datasetControls = form.append('div');
+        datasetControls
+        .classed('pad1y pad2x keyline-bottom col12', true)
+        .append('a')
+        .attr('href', '#')
+        .text('Add Dataset')
+        .classed('dark fr button loud pad2x big _icon plus margin0', true)
+        .on('click', function () {
+            //importData.classed('hidden', false);
+             Hoot.model.REST('getTranslations', function (d) {
+                 if(d.error){
+                     context.hoot().view.utilities.errorlog.reportUIError(d.error);
+                     return;
+                 }
+                context.hoot().control.utilities.dataset.importDataContainer(d);
+             });
+        });
+        datasetControls
+	        .classed('pad1y pad2x keyline-bottom col12', true)
+	        .append('a')
+	        .attr('href', '#')
+	        .text('Refresh')
+	        .classed('dark fr button loud pad2x big _icon check', true)
+	        .on('click', function () {
+	        	hoot_view_utilities_dataset.populateDatasets(d3.select('#datasettable'));
+	        });
 
-        fieldset = form.append('div')
-            .classed('pad1y pad2x keyline-bottom col12', true)
-            .append('a')
-            .attr('href', '#')
-            .text('Add Dataset')
-            .classed('dark fr button loud pad2x big _icon plus', true)
-            .on('click', function () {
-                //importData.classed('hidden', false);
-                 Hoot.model.REST('getTranslations', function (d) {
-                     if(d.error){
-                         context.hoot().view.utilities.errorlog.reportUIError(d.error);
-                         return;
-                     }
-                    context.hoot().control.utilities.dataset.importDataContainer(d);
-                 });
-
-            });
         fieldset = form.append('div')
         .attr('id','datasettable')
             .classed('col12 fill-white small strong row10 overflow', true)
             .call(hoot_view_utilities_dataset.populateDatasets);
-
     };
 
     _unflatten = function( array, parent, tree ){
@@ -70,6 +78,65 @@ Hoot.view.utilities.dataset = function(context)
         return html;
     }
     
+    _deleteDataset = function(spanType,parent_id,trashBtn,map_id){
+    	d3.event.stopPropagation();
+        d3.event.preventDefault();
+       
+        var warningMsg = spanType=='folder'? 'folder and all data?' : 'dataset?';
+        
+        if(!window.confirm("Are you sure you want to remove selected " + warningMsg)){return;}
+        
+        //delete all datasets that fall within folder.
+        d3.select(trashBtn)
+        	.classed('keyline-left keyline-right fr _icon trash pad2 col1',false)
+        	.classed('keyline-left keyline-right pad1 row1  col1 fr',true).call(iD.ui.Spinner(context));
+        
+        var datasets2remove = [];
+        
+        if(spanType=='folder'){
+        	datasets2remove = _.filter(hoot.model.layers.getAvailLayers(),function(f){
+        		return f.path.indexOf(parent_id)>=0;
+        	});
+        } else {
+        	var availLayers = context.hoot().model.layers.getAvailLayers();
+            datasets2remove=_.filter(availLayers,function(n){return n.id==map_id;});
+        }
+        
+        _.each(datasets2remove,function(dataset){
+        	var mapId = dataset.name;
+        	var exists = context.hoot().model.layers.getLayers()[mapId];
+            if(exists){
+                alert('Can not remove the layer in use.');
+                return;
+            }
+            this.disabled = true;
+            
+            //var trashBtn = this;
+	          d3.json('/hoot-services/osm/api/0.6/map/delete?mapId=' + mapId)
+	            .header('Content-Type', 'text/plain')
+	            .post("", function (error, data) {
+	
+	              var exportJobId = data.jobId;
+	              trashBtn.id = 'a' + exportJobId;
+	
+	                var statusUrl = '/hoot-services/job/status/' + exportJobId;
+	                var statusTimer = setInterval(function () {
+	                    d3.json(statusUrl, function (error, result) {
+	                        if (result.status !== 'running') {
+	                            Hoot.model.REST.WarningHandler(result);
+	                            clearInterval(statusTimer);
+	                            var btnId = result.jobId;
+	                            var curBtn = d3.select('#a' + btnId)[0];
+	                            d3.select(curBtn[0].parentNode.parentNode)
+	                            .remove();
+	                            context.hoot().model.layers.RefreshLayers();
+	                        }
+	                    });
+	                }, iD.data.hootConfig.JobStatusQueryInterval);	
+	            });
+        },this);
+    }
+    
     _createChildren = function(containerID,elem,tree){
     	var container = d3.select('#folder-'+containerID);
     	
@@ -81,69 +148,15 @@ Hoot.view.utilities.dataset = function(context)
 					.attr('id',"folder-" + item.id);
 				var datasetSpan = datasetDiv.append('span')
 			        .classed('text-left big col12 fill-white small hoverDiv2', true)
-			        .style('text-indent',item.depth*25 + 'px')
+			        .style('text-indent',(this.depth*(25*(this.depth+1))) + 'px')
 			        .text(item.name);
 				datasetSpan.append('button')
 					.classed('keyline-left keyline-right fr _icon trash pad2 col1', true)
 					.style('height', '100%')
 					.on('click', function () {
-			            d3.event.stopPropagation();
-			            d3.event.preventDefault();
-			           
-			            if(!window.confirm("Are you sure you want to remove selected folder and all data?")){
-			                return;
-			            }
-			            
-			            //delete all datasets that fall within folder.
-			            d3.select(this)
-			            	.classed('keyline-left keyline-right fr _icon trash pad2 col1',false)
-			            	.classed('keyline-left keyline-right pad1 row1  col1 fr',true).call(iD.ui.Spinner(context));
-			            
-			            var parent_id = this.parentNode.parentNode.id.replace('folder-','').split('-').join('|');
-			            var datasets2remove = _.filter(hoot.model.layers.getAvailLayers(),function(f){
-			        		return f.path.indexOf(parent_id)>=0;
-			        	});
-			            
-			            _.each(datasets2remove,function(dataset){
-			            	var mapId = dataset.name;
-			            	var exists = context.hoot().model.layers.getLayers()[mapId];
-				            if(exists){
-				                alert('Can not remove the layer in use.');
-				                return;
-				            }
-				            this.disabled = true;
-				            
-				            var trashBtn = this;
-					          d3.json('/hoot-services/osm/api/0.6/map/delete?mapId=' + mapId)
-					            .header('Content-Type', 'text/plain')
-					            .post("", function (error, data) {
-					
-					              var exportJobId = data.jobId;
-					              trashBtn.id = 'a' + exportJobId;
-					
-					                var statusUrl = '/hoot-services/job/status/' + exportJobId;
-					                var statusTimer = setInterval(function () {
-					                    d3.json(statusUrl, function (error, result) {
-					                        if (result.status !== 'running') {
-					                            Hoot.model.REST.WarningHandler(result);
-					                            clearInterval(statusTimer);
-					                            var btnId = result.jobId;
-					                            var curBtn = d3.select('#a' + btnId)[0];
-					                            d3.select(curBtn[0].parentNode.parentNode)
-					                            .remove();
-					                            context.hoot().model.layers.RefreshLayers();
-					                        }
-					                    });
-					                }, iD.data.hootConfig.JobStatusQueryInterval);	
-					            });
-			            },this);
-				            
-			            
-			            //refresh display
-			            hoot_view_utilities_dataset.populateDatasets(d3.selectAll('#datasettable'));
-			            
-			            
-			            
+						 var parent_id = this.parentNode.parentNode.id.replace('folder-','').split('-').join('|');
+						 var trashBtn = this;
+						_deleteDataset('folder',parent_id,trashBtn,null);
 					});
 
 				datasetSpan.append('button')
@@ -193,54 +206,10 @@ Hoot.view.utilities.dataset = function(context)
 			        .classed('keyline-left keyline-right fr _icon trash pad2 col1', true)
 			        .style('height', '100%')
 			        .on('click', function () {
-			            d3.event.stopPropagation();
-			            d3.event.preventDefault();
-			           
-			            if(!window.confirm("Are you sure you want to remove selected data?")){
-			                return;
-			            }
-			            
-			            var mapId = this.parentNode.parentNode.id.replace('dataset-','');//d3.select(this.parentNode).datum().name;
-
-			            //temp fix to get map name
-			            var availLayers = context.hoot().model.layers.getAvailLayers();
-			            mapId = _.pluck(_.filter(availLayers,function(n){return n.id==mapId;}),'name')[0];
-			            
-			            var exists = context.hoot().model.layers.getLayers()[mapId];
-			            if(exists){
-			                alert('Can not remove the layer in use.');
-			                return;
-			            }
-			            this.disabled = true;
-			
-			          d3.select(this).classed('keyline-left keyline-right fr _icon trash pad2 col1',false);
-			          d3.select(this).classed('keyline-left keyline-right pad1 row1  col1 fr',true).call(iD.ui.Spinner(context));
-			
-			
-			          var trashBtn = this;
-			          d3.json('/hoot-services/osm/api/0.6/map/delete?mapId=' + mapId)
-			            .header('Content-Type', 'text/plain')
-			            .post("", function (error, data) {
-			
-			              var exportJobId = data.jobId;
-			              trashBtn.id = 'a' + exportJobId;
-			
-			                var statusUrl = '/hoot-services/job/status/' + exportJobId;
-			                var statusTimer = setInterval(function () {
-			                    d3.json(statusUrl, function (error, result) {
-			                        if (result.status !== 'running') {
-			                            Hoot.model.REST.WarningHandler(result);
-			                            clearInterval(statusTimer);
-			                            var btnId = result.jobId;
-			                            var curBtn = d3.select('#a' + btnId)[0];
-			                            d3.select(curBtn[0].parentNode.parentNode)
-			                            .remove();
-			                            context.hoot().model.layers.RefreshLayers();
-			                        }
-			                    });
-			                }, iD.data.hootConfig.JobStatusQueryInterval);
-			                hoot_view_utilities_dataset.populateDatasets(d3.selectAll('#datasettable'));		
-			            });
+						var parent_id =  this.parentNode.parentNode.parentNode.id.replace('folder-','').split('-').join('|');
+			        	var map_id = this.parentNode.parentNode.id.replace('dataset-','');
+						var trashBtn = this;
+						_deleteDataset('dataset',parent_id,trashBtn,map_id);
 			        });
 			    datasetSpan.append('button')
 			        .classed('keyline-left fr _icon export pad2 col1', true)
@@ -333,7 +302,7 @@ Hoot.view.utilities.dataset = function(context)
                     .attr('id',function(d){return "folder-" + d.id});
                 var datasetSpan = datasetDiv.append('span')
                     .classed('text-left big col12 fill-white small hoverDiv2', true)
-                    .style('text-indent',d.depth*25 + 'px')
+                    .style('text-indent',(this.depth*(25*(this.depth+1))) + 'px')
                     .text(function (d) {
                         return d.name;
                     });
@@ -341,58 +310,9 @@ Hoot.view.utilities.dataset = function(context)
 					.classed('keyline-left keyline-right fr _icon trash pad2 col1', true)
 					.style('height', '100%')
 					.on('click', function () {
-						d3.event.stopPropagation();
-			            d3.event.preventDefault();
-			           
-			            if(!window.confirm("Are you sure you want to remove selected folder and all data?")){
-			                return;
-			            }
-			            
-			            //delete all datasets that fall within folder.
-			            d3.select(this)
-			            	.classed('keyline-left keyline-right fr _icon trash pad2 col1',false)
-			            	.classed('keyline-left keyline-right pad1 row1  col1 fr',true).call(iD.ui.Spinner(context));
-			            
-			            var parent_id = this.parentNode.parentNode.id.replace('folder-','').split('-').join('|');
-			            var datasets2remove = _.filter(hoot.model.layers.getAvailLayers(),function(f){
-			        		return f.path.indexOf(parent_id)>=0;
-			        	});
-			            
-			            _.each(datasets2remove,function(dataset){
-			            	var mapId = dataset.name;
-			            	var exists = context.hoot().model.layers.getLayers()[mapId];
-				            if(exists){
-				                alert('Can not remove the layer in use.');
-				                return;
-				            }
-				            this.disabled = true;
-				            
-				            var trashBtn = this;
-					          d3.json('/hoot-services/osm/api/0.6/map/delete?mapId=' + mapId)
-					            .header('Content-Type', 'text/plain')
-					            .post("", function (error, data) {
-					
-					              var exportJobId = data.jobId;
-					              trashBtn.id = 'a' + exportJobId;
-					
-					                var statusUrl = '/hoot-services/job/status/' + exportJobId;
-					                var statusTimer = setInterval(function () {
-					                    d3.json(statusUrl, function (error, result) {
-					                        if (result.status !== 'running') {
-					                            Hoot.model.REST.WarningHandler(result);
-					                            clearInterval(statusTimer);
-					                            var btnId = result.jobId;
-					                            var curBtn = d3.select('#a' + btnId)[0];
-					                            d3.select(curBtn[0].parentNode.parentNode)
-					                            .remove();
-					                            context.hoot().model.layers.RefreshLayers();
-					                        }
-					                    });
-					                }, iD.data.hootConfig.JobStatusQueryInterval);	
-					            });
-			            },this);				            
-			            //refresh display
-			            hoot_view_utilities_dataset.populateDatasets(d3.selectAll('#datasettable'));			            
+						 var parent_id = this.parentNode.parentNode.id.replace('folder-','').split('-').join('|');
+						 var trashBtn = this;
+						_deleteDataset('folder',parent_id,trashBtn,null);	
 					});
                 datasetSpan.append('button')//keyline-left fr _icon export pad2 col1
 					.classed('keyline-left fr _icon folderplus pad2 col1', true)
