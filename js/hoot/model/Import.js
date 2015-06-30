@@ -83,11 +83,16 @@ Hoot.model.import = function (context)
 
         }
 
+        //create proper path name, replacing any '/' with '|'
+        
+        var pathname = container.select('.reset.PathName').value();
+        pathname = pathname.replace('/','|');
+        if(pathname[pathname.length-1]!='|'){pathname += '|';}
 
         var data = {};
         data.INPUT_TYPE = typeName;
         data.TRANSLATION = transcriptName;//(transType === 'LTDS 4.0' || !transType) ? 'NFDD.js' : transType + '.js';
-        data.INPUT_NAME = container.select('.reset.LayerName').value();
+        data.INPUT_NAME = pathname.concat(container.select('.reset.LayerName').value());//container.select('.reset.LayerName').value();
         data.formData = import_layer.getFormData(/*document.getElementById('ingestfileuploader').files*/);
 
         Hoot.model.REST('Upload', data, _importResultHandler);

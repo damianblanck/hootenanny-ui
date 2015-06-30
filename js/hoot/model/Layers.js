@@ -9,7 +9,8 @@ Hoot.model.layers = function (context)
     model_layers.layers = layers;
     model_layers.getmapIdByName = function (name) {
         var ar = _.filter(model_layers.getAvailLayers(), function (a) {
-            return a.name === name;
+        	return a.name.lastIndexOf('|')+1 === name;
+        	//return a.name === name;
         });
         if(!ar.length){return null;}
         return ar[0].id;
@@ -18,7 +19,8 @@ Hoot.model.layers = function (context)
         var currAvailLayers = model_layers.getAvailLayers();
         var layerSort = _.object(_.pluck(currAvailLayers, 'id'), currAvailLayers);
         var obj = layerSort[id];
-        return obj ? obj.name : null;
+        //return obj ? obj.name : null;
+        return obj ? obj.name.lastIndexOf('|')+1 : null;
     };
 
 
@@ -35,6 +37,13 @@ Hoot.model.layers = function (context)
                 return callback([]);
             }
             availLayers = a.layers;
+            
+            //get path names
+            _.each(a.layers,function(lyr){
+            	if(lyr.name.indexOf('|')==-1){lyr.path='root'}
+            	else{lyr.path = lyr.name.slice(0,lyr.name.lastIndexOf('|'));}
+            });
+            
             if (callback) {
                 callback(availLayers);
             }
