@@ -99,7 +99,7 @@ Hoot.view.utilities.dataset = function(context)
 			            	.classed('keyline-left keyline-right fr _icon trash pad2 col1',false)
 			            	.classed('keyline-left keyline-right pad1 row1  col1 fr',true).call(iD.ui.Spinner(context));
 			            
-			            var parent_id = this.parentNode.parentNode.id.split('-').join('|').replace('folder/','')
+			            var parent_id = this.parentNode.parentNode.id.replace('folder-','').split('-').join('|');
 			            var datasets2remove = _.filter(hoot.model.layers.getAvailLayers(),function(f){
 			        		return f.path.indexOf(parent_id)>=0;
 			        	});
@@ -203,6 +203,7 @@ Hoot.view.utilities.dataset = function(context)
 			            var mapId = this.parentNode.parentNode.id.replace('dataset-','');//d3.select(this.parentNode).datum().name;
 
 			            //temp fix to get map name
+			            var availLayers = context.hoot().model.layers.getAvailLayers();
 			            mapId = _.pluck(_.filter(availLayers,function(n){return n.id==mapId;}),'name')[0];
 			            
 			            var exists = context.hoot().model.layers.getLayers()[mapId];
@@ -238,7 +239,7 @@ Hoot.view.utilities.dataset = function(context)
 			                        }
 			                    });
 			                }, iD.data.hootConfig.JobStatusQueryInterval);
-			
+			                hoot_view_utilities_dataset.populateDatasets(d3.selectAll('#datasettable'));		
 			            });
 			        });
 			    datasetSpan.append('button')
@@ -340,7 +341,7 @@ Hoot.view.utilities.dataset = function(context)
 					.classed('keyline-left keyline-right fr _icon trash pad2 col1', true)
 					.style('height', '100%')
 					.on('click', function () {
-			            d3.event.stopPropagation();
+						d3.event.stopPropagation();
 			            d3.event.preventDefault();
 			           
 			            if(!window.confirm("Are you sure you want to remove selected folder and all data?")){
@@ -348,12 +349,50 @@ Hoot.view.utilities.dataset = function(context)
 			            }
 			            
 			            //delete all datasets that fall within folder.
-			            d3.select(this).classed('keyline-left keyline-right fr _icon trash pad2 col1',false);
+			            d3.select(this)
+			            	.classed('keyline-left keyline-right fr _icon trash pad2 col1',false)
+			            	.classed('keyline-left keyline-right pad1 row1  col1 fr',true).call(iD.ui.Spinner(context));
 			            
+			            var parent_id = this.parentNode.parentNode.id.replace('folder-','').split('-').join('|');
+			            var datasets2remove = _.filter(hoot.model.layers.getAvailLayers(),function(f){
+			        		return f.path.indexOf(parent_id)>=0;
+			        	});
+			            
+			            _.each(datasets2remove,function(dataset){
+			            	var mapId = dataset.name;
+			            	var exists = context.hoot().model.layers.getLayers()[mapId];
+				            if(exists){
+				                alert('Can not remove the layer in use.');
+				                return;
+				            }
+				            this.disabled = true;
+				            
+				            var trashBtn = this;
+					          d3.json('/hoot-services/osm/api/0.6/map/delete?mapId=' + mapId)
+					            .header('Content-Type', 'text/plain')
+					            .post("", function (error, data) {
+					
+					              var exportJobId = data.jobId;
+					              trashBtn.id = 'a' + exportJobId;
+					
+					                var statusUrl = '/hoot-services/job/status/' + exportJobId;
+					                var statusTimer = setInterval(function () {
+					                    d3.json(statusUrl, function (error, result) {
+					                        if (result.status !== 'running') {
+					                            Hoot.model.REST.WarningHandler(result);
+					                            clearInterval(statusTimer);
+					                            var btnId = result.jobId;
+					                            var curBtn = d3.select('#a' + btnId)[0];
+					                            d3.select(curBtn[0].parentNode.parentNode)
+					                            .remove();
+					                            context.hoot().model.layers.RefreshLayers();
+					                        }
+					                    });
+					                }, iD.data.hootConfig.JobStatusQueryInterval);	
+					            });
+			            },this);				            
 			            //refresh display
-			            hoot_view_utilities_dataset.populateDatasets(d3.selectAll('#datasettable'));
-			            
-			            
+			            hoot_view_utilities_dataset.populateDatasets(d3.selectAll('#datasettable'));			            
 					});
                 datasetSpan.append('button')//keyline-left fr _icon export pad2 col1
 					.classed('keyline-left fr _icon folderplus pad2 col1', true)

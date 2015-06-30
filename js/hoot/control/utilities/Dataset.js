@@ -526,7 +526,7 @@ Hoot.control.utilities.dataset = function(context) {
                         if(_form.select('.reset.PathName').value().length > 0)
                         {
                         	var pattern = new RegExp(/[~`!#$%\^&*+=\-\[\]\\';,{}|\\":<>\?|]/);
-                        	if(pattern.test(_form.select('.reset.PathName').value()) == false){
+                        	if(pattern.test(_form.select('.reset.PathName').value()) == true){
                         		alert("Please do not use special character in path name.");
                                 return;
                         	}
