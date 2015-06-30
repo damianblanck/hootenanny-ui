@@ -87,7 +87,7 @@ Hoot.model.import = function (context)
         
         var pathname = container.select('.reset.PathName').value();
         pathname = pathname.replace('/','|');
-        if(pathname[pathname.length-1]!='|'){pathname += '|';}
+        if(pathname !='' && pathname[pathname.length-1]!='|'){pathname += '|';}
 
         var data = {};
         data.INPUT_TYPE = typeName;
