@@ -84,9 +84,9 @@ Hoot.model.import = function (context)
         }
 
         //create proper path name, replacing any '/' with '|'
-        
+        var re = new RegExp('/','g')
         var pathname = container.select('.reset.PathName').value();
-        pathname = pathname.replace('/','|');
+        pathname = pathname.replace(re,'|');
         if(pathname !='' && pathname[pathname.length-1]!='|'){pathname += '|';}
 
         var data = {};

@@ -148,7 +148,7 @@ Hoot.view.utilities.dataset = function(context)
 					.attr('id',"folder-" + item.id);
 				var datasetSpan = datasetDiv.append('span')
 			        .classed('text-left big col12 fill-white small hoverDiv2', true)
-			        .style('text-indent',(this.depth*(25*(this.depth+1))) + 'px')
+			        .style('text-indent',(25*(item.depth)) + 'px')
 			        .text(item.name);
 				datasetSpan.append('button')
 					.classed('keyline-left keyline-right fr _icon trash pad2 col1', true)
@@ -198,7 +198,10 @@ Hoot.view.utilities.dataset = function(context)
         		 	.attr('id',function(d){return "dataset-" + dataset.id});
         		 var datasetSpan = datasetDiv.append('span')
         		 	.classed('text-left big col12 fill-white small hoverDiv2', true)
-        		 	.style('text-indent',(this.depth*(25*(this.depth+1))) + 'px')
+        		 	.style('text-indent',function(){
+        		 		var level = dataset.path.split('|').length-1;
+        		 		if(level==0){return '0px';}
+        		 		else{return 25*(dataset.path.split('|').length) + 'px';}})
         		 	.text(dataset.name.substring(dataset.name.lastIndexOf('|')+1));
         	        	
 			    datasetSpan.append('button')
@@ -302,7 +305,7 @@ Hoot.view.utilities.dataset = function(context)
                     .attr('id',function(d){return "folder-" + d.id});
                 var datasetSpan = datasetDiv.append('span')
                     .classed('text-left big col12 fill-white small hoverDiv2', true)
-                    .style('text-indent',(this.depth*(25*(this.depth+1))) + 'px')
+                    .style('text-indent','0px')
                     .text(function (d) {
                         return d.name;
                     });
