@@ -199,6 +199,10 @@ Hoot.control.utilities.dataset = function(context) {
                 placeholder: 'Save As',
                 type: 'LayerName'
             }, {
+            	label: 'Path',
+            	placeholder: 'root',
+            	type: 'PathName'
+            }, {
                 label: 'Translation Schema',
                 placeholder: 'Select Data Translation Schema',
                 type: 'Schema',
@@ -518,6 +522,16 @@ Hoot.control.utilities.dataset = function(context) {
                             alert("Please do not use special character in layer name.");
                             return;
                         }
+                   
+                        if(_form.select('.reset.PathName').value().length > 0)
+                        {
+                        	var pattern = new RegExp(/[~`!#$%\^&*+=\-\[\]\\';,{}|\\":<>\?|]/);
+                        	if(pattern.test(_form.select('.reset.PathName').value()) == false){
+                        		alert("Please do not use special character in path name.");
+                                return;
+                        	}
+                        }
+                                                
                         var importText = submitExp.select('span').text();
                         if(importText == 'Import'){
                             submitExp.select('span').text('Uploading ...');
