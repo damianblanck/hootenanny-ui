@@ -340,6 +340,60 @@ Hoot.model.layers = function (context)
         });
         return merged;
     };
+    
+    model_layers.getAvailFolders = function (d) {
+    	
+    	var folderNames = _.filter(_.pluck(d,'path'),function(f){return f!='root';});
+    	
+    	var folders=[];
+    	for(var i = 0;i<folderNames.length;i++){
+    		var pFolders = folderNames[i].split('|');
+    		for(var j=pFolders.length-1;j>=0;j--){
+    			var folderID = pFolders.slice(0,j+1).join("-").replace(' ','_'),
+    				parentID = ((j==0) ? 'root' : pFolders.slice(0,j).join("-").replace(' ','_')),
+    				folderName = pFolders[j];
+    			if(_.findWhere(folders,{id:folderID,parentid:parentID,name:folderName})== undefined){folders.push({'id':folderID,'parentid':parentID,'name':folderName,'depth':j});}
+    		}
+    	}
+    	
+    	return folders;
+    };
+    
+    model_layers.unflattenFolders = function(array,parent,tree) {
+        tree = typeof tree !== 'undefined' ? tree : [];
+        parent = typeof parent !== 'undefined' ? parent : { id: 'root' };
+                
+        var children = _.filter( array, function(child){ return child.parentid == parent.id; });
 
+        if( !_.isEmpty( children )  ){
+            if( parent.id == 'root' ){
+            	tree = children;   
+            }else{
+               parent['children'] = children;
+            }
+            _.each( children, function( child ){ model_layers.unflattenFolders( array, child ) } );                    
+        }
+
+        parent['type']='folder';
+        return tree;
+    };
+
+    model_layers.getAvailLayersWithFolders = function(){
+    	var folders = model_layers.getAvailFolders(model_layers.getAvailLayers()).slice(0);
+    	
+    	//add layers to appropriate folders
+    	_.each(model_layers.getAvailLayers(),function(l){
+    		var parent = _.findWhere(folders,{id:l.path.split('|').join('-')})
+    		if(parent){
+    			if(!parent.children){parent.children = [];}
+    			l.type = 'dataset';
+    			parent.children.push(l);
+    		}
+    	});
+    	
+    	//unflatten
+    	return model_layers.unflattenFolders(folders);
+    };
+    
     return model_layers;
 }

@@ -2,12 +2,20 @@ Hoot.control.import = function (context,selection) {
     var event = d3.dispatch('addLayer', 'finished');
     var ETL = {};
 
+    ETL.renderTree = function(a) {
+    	if(a.tree){
+    		hoot.control.utilities.folder.createFolderTree(d3.select(this));
+    	}
+    }
+    
     ETL.createCombo = function (a) {
         var combo = d3.combobox()
             .data(_.map(a.combobox, function (n) {
                 return {
-                    value: n,
-                    title: n
+                	value: n.name,
+                    title: n.name,
+                    parent: n.parentid,
+                    children: n.children
                 };
             }));
         combo.minItems(1);            
@@ -49,7 +57,9 @@ Hoot.control.import = function (context,selection) {
             combobox: _.map(context.hoot().model.layers
                 .getAvailLayers(), function (n) {
                     return n.name;
-                })
+                }),
+            tree: context.hoot().model.layers
+            		.getAvailLayersWithFolders()
         }];
 
         var sels = selection.selectAll('forms');
@@ -87,6 +97,13 @@ Hoot.control.import = function (context,selection) {
             .data(d_form)
             .enter()
             .append('div')
+            .select(ETL.renderTree);
+        
+        fieldset.classed('pad1 keyline-left keyline-right keyline-bottom round-bottom hidden', true)
+        .selectAll('.form-field')
+        .data(d_form)
+        .enter()
+            .append('div')
             .classed('form-field fill-white small keyline-all round space-bottom1', true)
             .html(function (field) {
                 return '<label class="pad1x pad0y strong fill-light round-top keyline-bottom">' + field.label + '</label>';
@@ -100,7 +117,8 @@ Hoot.control.import = function (context,selection) {
                 return 'reset ' + field.type;
             })
             .select(ETL.renderCombo);
-        fieldset
+        
+        /*fieldset
             .append('div')
             .classed('keyline-all form-field palette clearfix round', true)
             .style('width', 'auto')
@@ -136,7 +154,7 @@ Hoot.control.import = function (context,selection) {
                     .datum(d3.select(this)
                         .datum()
                         .name);
-            });
+            });*/
         fieldset
             .append('div')
             .classed('form-field col12', true)

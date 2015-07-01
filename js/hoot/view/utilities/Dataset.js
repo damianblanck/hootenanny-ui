@@ -36,25 +36,6 @@ Hoot.view.utilities.dataset = function(context)
             .call(hoot_view_utilities_dataset.populateDatasets);
     };
 
-    _unflatten = function( array, parent, tree ){
-
-        tree = typeof tree !== 'undefined' ? tree : [];
-        parent = typeof parent !== 'undefined' ? parent : { id: 'root' };
-
-        var children = _.filter( array, function(child){ return child.parentid == parent.id; });
-
-        if( !_.isEmpty( children )  ){
-            if( parent.id == 'root' ){
-               tree = children;   
-            }else{
-               parent['children'] = children
-            }
-            _.each( children, function( child ){ _unflatten( array, child ) } );                    
-        }
-
-        return tree;
-    }
-
     _createFolders = function(data, isSub){
     	//create a div and span for each, nested under parent
         var html = (isSub)?'<div>':''; // Wrap with div if true
@@ -281,19 +262,8 @@ Hoot.view.utilities.dataset = function(context)
         		var enabled = true;
             	container.selectAll('div').remove();
             	
-            	var folderNames = _.filter(_.pluck(d,'path'),function(f){return f!='root';});
-            	
-            	var folders=[];
-            	for(var i = 0;i<folderNames.length;i++){
-            		var pFolders = folderNames[i].split('|');
-            		for(var j=pFolders.length-1;j>=0;j--){
-            			var folderID = pFolders.slice(0,j+1).join("-").replace(' ','_'),
-            				parentID = ((j==0) ? 'root' : pFolders.slice(0,j).join("-").replace(' ','_')),
-            				folderName = pFolders[j];
-            			if(_.findWhere(folders,{id:folderID,parentid:parentID,name:folderName})== undefined){folders.push({'id':folderID,'parentid':parentID,'name':folderName,'depth':j});}
-            		}
-            	}
-            	var tree = _unflatten(folders);            	
+            	var folders = context.hoot().model.layers.getAvailFolders(d);
+            	var tree = context.hoot().model.layers.unflattenFolders(folders);            	
             	
             	//First create folders, then place datasets            	
             	tree= JSON.parse('{"name":"Datasets","children":' + JSON.stringify(tree) +'}');
