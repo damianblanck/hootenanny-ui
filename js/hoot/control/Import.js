@@ -99,7 +99,7 @@ Hoot.control.import = function (context,selection) {
             .append('div')
             .select(ETL.renderTree);
         
-        fieldset.classed('pad1 keyline-left keyline-right keyline-bottom round-bottom hidden', true)
+        /*fieldset.classed('pad1 keyline-left keyline-right keyline-bottom round-bottom hidden', true)
         .selectAll('.form-field')
         .data(d_form)
         .enter()
@@ -116,9 +116,9 @@ Hoot.control.import = function (context,selection) {
             .attr('class', function (field) {
                 return 'reset ' + field.type;
             })
-            .select(ETL.renderCombo);
+            .select(ETL.renderCombo);*/
         
-        /*fieldset
+        fieldset
             .append('div')
             .classed('keyline-all form-field palette clearfix round', true)
             .style('width', 'auto')
@@ -154,7 +154,7 @@ Hoot.control.import = function (context,selection) {
                     .datum(d3.select(this)
                         .datum()
                         .name);
-            });*/
+            });
         fieldset
             .append('div')
             .classed('form-field col12', true)
