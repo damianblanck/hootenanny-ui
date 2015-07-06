@@ -517,7 +517,14 @@ Hoot.control.utilities.dataset = function(context) {
                 .classed('inline row1 fl col10 pad1y', true)
                     .text('Import')
                     .on('click', function () {
-                        if(context.hoot().checkForSpecialChar(_form.select('.reset.LayerName').value()) == false)
+                        //check if layer with same name already exists...
+                    	if(_.filter(_.map(_.pluck(hoot.model.layers.getAvailLayers(),'name'),function(l){return l.substring(l.lastIndexOf('|')+1);}),function(f){return f == _form.select('.reset.LayerName').value();}))
+                    	{
+                            alert("A layer already exists with this name. Please remove the current layer or select a new name for this layer.");
+                            return;
+                        }
+                    	
+                    	if(context.hoot().checkForSpecialChar(_form.select('.reset.LayerName').value()) == false)
                         {
                             alert("Please do not use special character in layer name.");
                             return;
