@@ -97,7 +97,6 @@ Hoot.control.import = function (context,selection) {
             .data(d_form)
             .enter()
             .append('div')
-            .style({'overflow-y':'auto','height':'150px','margin':'0 0 15px'})
             .select(ETL.renderTree);
         
         /*fieldset.classed('pad1 keyline-left keyline-right keyline-bottom round-bottom hidden', true)

@@ -12,7 +12,7 @@ Hoot.control.utilities.folder = function(context) {
 	
     	var margin = {top: 10, right: 20, bottom: 30, left: 0},
 	        width = '100%',
-	        height = '150px', //'100%',
+	        height = '100%',
 	        barHeight = 20,
 	        barWidth = 100;
     	
