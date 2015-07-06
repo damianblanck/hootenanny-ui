@@ -71,14 +71,16 @@ Hoot.control.utilities.folder = function(context) {
 	          .attr("height", barHeight)
 	          .attr("width", function(d){
 	        	  return '100%';})
-	          .style("fill", color)
+	          //.style("fill", color)
+	          .attr("class", rectClass)
 	          .on("click", click);
 	
 	      nodeEnter.append("text")
 	          .attr("dy", 3.5)
 	          .attr("dx", function(d){
 	        	  return  5.5+(11*d.depth);})	//5.5
-	          .text(function(d) { return d.name; });
+	          .attr('lyr-id',function(d){return d.id;})
+	          .text(function(d) { return d.name.substring(d.name.lastIndexOf('|')+1); });
 	      	
 	      // Transition nodes to their new position.
 	      nodeEnter.transition()
@@ -91,7 +93,8 @@ Hoot.control.utilities.folder = function(context) {
 	          .attr("transform", function(d) { return "translate(" + 0 + "," + d.x + ")"; })
 	          .style("opacity", 1)
 	        .select("rect")
-	          .style("fill", color);
+	          //.style("fill", color);
+	          .attr("class", rectClass);
 	
 	      // Transition exiting nodes to the parent's new position.
 	      node.exit().transition()
@@ -156,8 +159,13 @@ Hoot.control.utilities.folder = function(context) {
 	    }
 	
 	    function color(d) {
-	      return d.selected ? "#ffff99" : d._children ? "#3182bd" : "#c6dbef";
+	      //return d.selected ? "#ffff99" : d._children ? "#3182bd" : "#c6dbef";
+	    	return d._children ? "#3182bd" : "#c6dbef";
 	    }
+	    
+	    function rectClass(d) {
+		      return d.selected ? "sel" : d._children ? "more" : "flat";
+		    }
 	    
 	    function getWidth(d) {
 	    	return '100%';

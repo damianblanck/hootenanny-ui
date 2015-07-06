@@ -3038,6 +3038,12 @@ table.custom-conflation-table th {
 	color: #CCC;
 }
 
+/* rect css for collapsable folder/dataset menu */
+rect.sel {fill: #ffff99 !important;}
+rect.flat {fill: #c6dbef;}
+rect.more {fill: #3182bd;}
+
+
 input:focus::-webkit-input-placeholder { color:transparent; }
 input:focus:-moz-placeholder { color:transparent; } /* Firefox 18- */
 input:focus::-moz-placeholder { color:transparent; } /* Firefox 19+ */
