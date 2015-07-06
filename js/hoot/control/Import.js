@@ -174,15 +174,33 @@ Hoot.control.import = function (context,selection) {
             
             d3.event.stopPropagation();
             d3.event.preventDefault();
+            
             var self = d3.select(a);
             var color = self.select('.palette .active')
                 .attr('data-color');
-            var name = self.select('.reset.fileImport')
-                .value();
-                if(!name){alert('Select Layer to Add');return;}
-                if(context.hoot().model.layers.getLayers()[name]){alert('Layer already exists');return;}
+            
+            // make sure something has been selected
+            if(self.select('.sel').empty()){
+            	alert('Please select a dataset to add to the map!');
+                return;
+            }
+            
+            var name,
+            	lyrid;
+            try{
+            	name = d3.select(self.select('.sel').node().nextSibling).text();
+            	lyrid = d3.select(self.select('.sel').node().nextSibling).attr('lyr-id');
+            } catch(e) {
+            	alert('There was an error adding this layer to the map!');
+                return;
+            }
+            /*var name = self.select('.reset.fileImport')
+                .value();*/
+            if(!name || !lyrid){alert('Select Layer to Add');return;}
+            if(context.hoot().model.layers.getLayers()[name]){alert('Layer already exists');return;}
             var key = {
                 'name': name,
+                'id':lyrid,
                 color: color
             };
 

@@ -9,7 +9,7 @@ Hoot.model.layers = function (context)
     model_layers.layers = layers;
     model_layers.getmapIdByName = function (name) {
         var ar = _.filter(model_layers.getAvailLayers(), function (a) {
-        	return a.name.lastIndexOf('|')+1 === name;
+        	return a.name.substring(a.name.lastIndexOf('|')+1) === name;
         	//return a.name === name;
         });
         if(!ar.length){return null;}
@@ -175,7 +175,7 @@ Hoot.model.layers = function (context)
     model_layers.addLayer = function (key, callback) {
         // this isLayerLoading tracks on till key is added to layers object.
         isLayerLoading = true;
-        var cMapId =  model_layers.getmapIdByName(key.name) || 155;
+        var cMapId =  key.id? key.id : model_layers.getmapIdByName(key.name) || 155;
         context.connection().getMbrFromUrl(cMapId, function(resp){
             if(resp == null){
 
