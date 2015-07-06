@@ -5,20 +5,16 @@ Hoot.control.utilities.folder = function(context) {
 
     hoot_control_utilities_folder.createFolderTree = function(container) {
     	// http://bl.ocks.org/mbostock/1093025 - Collapsible Indented Tree
-    	/*var margin = {top: 30, right: 20, bottom: 30, left: 20},
-	        width = 400 - margin.left - margin.right,
-	        barHeight = 20,
-	        barWidth = width * .8;*/
     	
     	var folders = context.hoot().model.layers
 		.getAvailLayersWithFolders();
     	folders= JSON.parse('{"name":"Datasets","children":' + JSON.stringify(folders) +'}');
 	
-    	var margin = {top: 30, right: 20, bottom: 30, left: 20},
+    	var margin = {top: 10, right: 20, bottom: 30, left: 0},
 	        width = '100%',
 	        height = '100%',
 	        barHeight = 20,
-	        barWidth = 90;
+	        barWidth = 100;
     	
 	    var i = 0,
 	        duration = 400,
@@ -74,7 +70,7 @@ Hoot.control.utilities.folder = function(context) {
 	          .attr("y", -barHeight / 2)
 	          .attr("height", barHeight)
 	          .attr("width", function(d){
-	        	  return '95%';})
+	        	  return '100%';})
 	          .style("fill", color)
 	          .on("click", click);
 	
@@ -141,19 +137,26 @@ Hoot.control.utilities.folder = function(context) {
 	    }
 	
 	    // Toggle children on click.
+	    // If no children, consider it a dataset!
 	    function click(d) {
+	      var nodes = tree.nodes(root);
+	      _.each(nodes,function(n){n.selected=false;});
+	    	
 	      if (d.children) {
 	        d._children = d.children;
 	        d.children = null;
+	        d.selected = false;
 	      } else {
 	        d.children = d._children;
 	        d._children = null;
+	        //change color to signify selected
+	        if(d.type=='dataset'){d.selected=true;}
 	      }
 	      update(d);
 	    }
 	
 	    function color(d) {
-	      return d._children ? "#3182bd" : "#c6dbef";
+	      return d.selected ? "#ffff99" : d._children ? "#3182bd" : "#c6dbef";
 	    }
 	    
 	    function getWidth(d) {

@@ -266,7 +266,7 @@ Hoot.view.utilities.dataset = function(context)
             	var tree = context.hoot().model.layers.unflattenFolders(folders);            	
             	
             	//First create folders, then place datasets            	
-            	tree= JSON.parse('{"name":"Datasets","children":' + JSON.stringify(tree) +'}');
+            	tree= JSON.parse('{"name":"Datasets","type":"root","children":' + JSON.stringify(tree) +'}');
             	var la = container.selectAll('div')
             	    .data(tree.children)
                     .enter();
