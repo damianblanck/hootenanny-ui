@@ -57,8 +57,7 @@ Hoot.control.utilities.folder = function(context) {
 			var svgHt = svg.node().getBoundingClientRect().width; 
 			var rectHt = 20*(svg.selectAll('rect')[0].length-1);
 			var tx = 0,
-				ty = Math.min(10, Math.max(-rectHt,  d3.event.translate[1]));
-			//console.log(ty);
+				ty = Math.min(10, Math.max(-rectHt,rectHt-svgHt,  d3.event.translate[1]));
 			zoom.translate([tx, ty]);
 			svg.attr("transform", "translate(" + [tx,ty] + ")scale(" + d3.event.scale + ")");
 		}
@@ -98,7 +97,7 @@ Hoot.control.utilities.folder = function(context) {
 	          .attr("height", barHeight)
 	          .attr("width", function(d){
 	        	  return '100%';})
-	          //.style("fill", color)
+	          .style("fill", color)
 	          .attr("class", rectClass)
 	          .on("click", click);
 	
@@ -120,7 +119,7 @@ Hoot.control.utilities.folder = function(context) {
 	          .attr("transform", function(d) { return "translate(" + 0 + "," + d.x + ")"; })
 	          .style("opacity", 1)
 	        .select("rect")
-	          //.style("fill", color);
+	          .style("fill", color)
 	          .attr("class", rectClass);
 	
 	      // Transition exiting nodes to the parent's new position.
@@ -187,7 +186,9 @@ Hoot.control.utilities.folder = function(context) {
 	
 	    function color(d) {
 	      //return d.selected ? "#ffff99" : d._children ? "#3182bd" : "#c6dbef";
-	    	return d._children ? "#3182bd" : "#c6dbef";
+	    	//http://meyerweb.com/eric/tools/color-blend
+	    	var gradient = ['#84B3D9','#8DB9DC','#97BEDF','#A0C4E2','#AACAE6','#B3D0E9','#BDD5EC','#C6DBEF']
+	    	return d._children ? "#3182bd" : d.depth<=gradient.length-1 ? gradient[d.depth] : gradient[gradient.length-1];
 	    }
 	    
 	    function rectClass(d) {
