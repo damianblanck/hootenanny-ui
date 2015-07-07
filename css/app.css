@@ -2160,7 +2160,7 @@ img.wiki-image {
     position: absolute;
     z-index: 1;
     right: 0;
-    bottom: 30px;
+    bottom: 90px; /* 30px; */
     width: 240px;
     border-radius: 4px 0 0 0;
     border-bottom: 1px solid black;
