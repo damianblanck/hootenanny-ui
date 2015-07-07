@@ -16,6 +16,22 @@ Hoot.control.utilities.folder = function(context) {
 	        barHeight = 20,
 	        barWidth = 100;
     	
+    	var x = d3.scale.linear()
+	    	.domain([0, 0])
+	    	.range([0, 0]);
+	
+	    var y = d3.scale.linear()
+	    	.domain([0, 10])
+	    	.range([20, 0]);
+	    
+	    var panExtent = {x: [0,0], y: [-100,0] };
+	    
+	    var zoom = d3.behavior.zoom()
+			.scaleExtent([1, 2])
+			.x(x)
+			.y(y)
+			.on("zoom", zoomed);
+    	
 	    var i = 0,
 	        duration = 400,
 	        root;
@@ -30,11 +46,22 @@ Hoot.control.utilities.folder = function(context) {
 	        .attr("width", width)// + margin.left + margin.right)
 	        .attr("height", height)// + margin.left + margin.right)
 	      .append("g")
-	        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+	        .call(zoom);
 	   
 		folders.x0=0;
 		folders.y0=0;
 		update(root=folders);
+		
+		function zoomed() {
+			var svgHt = svg.node().getBoundingClientRect().width; 
+			var rectHt = 20*(svg.selectAll('rect')[0].length-1);
+			var tx = 0,
+				ty = Math.min(10, Math.max(-rectHt,  d3.event.translate[1]));
+			//console.log(ty);
+			zoom.translate([tx, ty]);
+			svg.attr("transform", "translate(" + [tx,ty] + ")scale(" + d3.event.scale + ")");
+		}
 	
 	    function update(source) {
 	
